@@ -176,7 +176,7 @@ namespace WfsMrFlexSetup
             public string Protocol { get; set; }
         }
 
-        public static void KillByPort(int port)
+        public static void KillByPort(int port, bool isSilent = false)
         {
             var processes = GetAllProcesses();
             if (processes.Any(p => p.Port == port))
@@ -190,7 +190,8 @@ namespace WfsMrFlexSetup
                 }
             else
             {
-                MessageBox.Show("No process to kill!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if(!isSilent)
+                MessageBox.Show("No process to kill on this port!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         public static List<PRC> GetAllProcesses()

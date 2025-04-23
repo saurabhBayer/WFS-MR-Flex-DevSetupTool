@@ -72,6 +72,7 @@
 			this.btnWorklistSimulator = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
 			this.execProgressbar = new System.Windows.Forms.ProgressBar();
+			this.btnElectronMode = new System.Windows.Forms.Button();
 			this.groupBoxMode.SuspendLayout();
 			this.tabcontrolPOC.SuspendLayout();
 			this.tabPOC.SuspendLayout();
@@ -329,6 +330,7 @@
 			// 
 			// gbpOverlay
 			// 
+			this.gbpOverlay.Controls.Add(this.btnElectronMode);
 			this.gbpOverlay.Controls.Add(this.btnOverlayShell);
 			this.gbpOverlay.Controls.Add(this.label7);
 			this.gbpOverlay.Controls.Add(this.btnOverlayFolder);
@@ -603,6 +605,18 @@
 			this.execProgressbar.TabIndex = 10;
 			this.execProgressbar.Visible = false;
 			// 
+			// btnElectronMode
+			// 
+			this.btnElectronMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnElectronMode.Location = new System.Drawing.Point(346, 142);
+			this.btnElectronMode.Margin = new System.Windows.Forms.Padding(2);
+			this.btnElectronMode.Name = "btnElectronMode";
+			this.btnElectronMode.Size = new System.Drawing.Size(220, 73);
+			this.btnElectronMode.TabIndex = 11;
+			this.btnElectronMode.Text = "Start Overlay in Electron Mode";
+			this.btnElectronMode.UseVisualStyleBackColor = true;
+			this.btnElectronMode.Click += new System.EventHandler(this.btnElectronMode_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -685,6 +699,7 @@
 		private System.Windows.Forms.Button btnOrionExplorer;
 		private System.Windows.Forms.Button btnWorklistSimulator;
 		private System.Windows.Forms.ProgressBar execProgressbar;
+		private System.Windows.Forms.Button btnElectronMode;
 	}
 }
 

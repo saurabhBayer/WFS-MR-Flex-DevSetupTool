@@ -505,6 +505,26 @@ namespace WfsMrFlexSetup
             Utils.RunProcess(risSimStart, risSimDirectory, false, false, false);
         }
 
+        private void btnElectronMode_Click(object sender, EventArgs e)
+        {
+            Utils.KillByPort(Convert.ToInt32(txtOverlayPortNumber.Text), true);
+            Utils.KillByPort(3005, true);
+
+            Utils.KillByPort(3003, true);
+            Utils.KillByPort(Convert.ToInt32(txtPortNumber.Text), true);
+
+            // ui-manager (socket IO server)
+            string uiMgrStart = ConfigurationManager.AppSettings["overlayUiManagerStart"];
+            string overlaySourceDir = ConfigurationManager.AppSettings["overlaySourceDirectory"];
+            Utils.RunProcess(uiMgrStart, overlaySourceDir, false, false, false);
+
+            // Node.js shell and ng serve
+            string startNodeJsAndNgServe = ConfigurationManager.AppSettings["overlayStartElectron"]
+                .Replace("_doubleampersand_", "&&");
+            Utils.RunProcess(startNodeJsAndNgServe, string.Empty, false, false, false);
+        }
         #endregion
+
+
     }
 }
