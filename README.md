@@ -1,1 +1,1 @@
-# WFS-MR-Flex-DevSetupTool
+# WFS-MR-DevSetup
