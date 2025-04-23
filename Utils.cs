@@ -153,12 +153,12 @@ namespace WfsMrFlexSetup
                     process?.WaitForExit(); // correctly waits for redirected I/O to finish
 
                     if (showCompletedPopup)
-                        MessageBox.Show("Completed");
+                        MessageBox.Show("Completed", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

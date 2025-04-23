@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace WfsMrFlexSetup
 {
     public partial class Form1 : Form
     {
-        private const string VERSION = "1.0";
+        private const string VERSION = "2.0";
 
         private string currentMode = null;
 
         private readonly string REGISTRY_PATH_CURRENTINJECTOR = ConfigurationManager.AppSettings["registryPathCurrentInjector"];
         private readonly string REGISTRY_KEY_CURRENTINJECTOR = ConfigurationManager.AppSettings["registryKeyCurrentInjector"];
+
+        private readonly string REGISTRY_PATH_DISTROS = ConfigurationManager.AppSettings["registryPathDistros"];
+        private readonly string REGISTRY_DISTRO_KEY_SII = ConfigurationManager.AppSettings["registryKeyDistrosSII"];
+        private readonly string REGISTRY_DISTRO_VALUE_SII = ConfigurationManager.AppSettings["registryKeyDistrosSIIValue"];
+        private readonly string REGISTRY_DISTRO_KEY_MRXP = ConfigurationManager.AppSettings["registryKeyDistrosMrxp"];
+        private readonly string REGISTRY_DISTRO_VALUE_MRXP = ConfigurationManager.AppSettings["registryKeyDistrosMrxpValue"];
 
         private readonly string INJECTOR_ADAPTER_APPCONFIG_PATH
             = Path.Combine(ConfigurationManager.AppSettings["certegraDirectory"],
@@ -37,7 +44,10 @@ namespace WfsMrFlexSetup
         public Form1()
         {
             InitializeComponent();
+            execProgressbar.Visible = false;
+            this.btnSwitchMode.Enabled = Convert.ToBoolean(MiscDirectory = ConfigurationManager.AppSettings["modeSwitchFeature"]);
             this.gbpOrion.Enabled = Convert.ToBoolean(MiscDirectory = ConfigurationManager.AppSettings["orionServerFeature"]);
+            this.gbpOverlay.Enabled = Convert.ToBoolean(MiscDirectory = ConfigurationManager.AppSettings["overlayFeature"]);
             this.Text = $"WFS-MR-FLEX-DevSetup (ver {VERSION})";
             RefreshCurrentMode();
         }
@@ -46,20 +56,43 @@ namespace WfsMrFlexSetup
         {
             currentMode = Utils.GetRegistryValue(REGISTRY_PATH_CURRENTINJECTOR, REGISTRY_KEY_CURRENTINJECTOR);
 
+            labelCurrentMode.Text = currentMode;
+            btnSwitchMode.Text = $"{SWITCH_MODE_BTN_LABEL} {GetOppositeMode()}";
+
             RefreshValuesFromAppConfig();
+        }
+
+        private string GetOppositeMode()
+        {
+            if (currentMode == Modes.MODE_SR)
+                return Modes.MODE_MRXP;
+            else if (currentMode == Modes.MODE_MRXP)
+                return Modes.MODE_SR;
+            else
+                return Modes.MODE_SR;
         }
 
         /// <summary>
         /// Depending on value of this.currentMode, pull the appropriate values from app.config and update my class members
         /// </summary>
         private void RefreshValuesFromAppConfig()
-        { 
-
+        {
+            if (currentMode == Modes.MODE_SR)
+            {
+                MiscDirectory = ConfigurationManager.AppSettings["s2MiscDirectory"];
+                BuildSimulatorDebug = ConfigurationManager.AppSettings["s2BuildSimDebug"];
+                SimulatorDirectory = ConfigurationManager.AppSettings["s2SimulatorDirectory"];
+                StartSimDebug = ConfigurationManager.AppSettings["s2StartSimDebug"];
+                StopSimDebug = ConfigurationManager.AppSettings["s2StopSimDebug"];
+            }
+            else if (currentMode == Modes.MODE_MRXP)
+            {
                 MiscDirectory = ConfigurationManager.AppSettings["mrxpMiscDirectory"];
                 BuildSimulatorDebug = ConfigurationManager.AppSettings["mrxpBuildSimDebug"];
                 SimulatorDirectory = ConfigurationManager.AppSettings["mrxpSimulatorDirectory"];
                 StartSimDebug = ConfigurationManager.AppSettings["mrxpStartSimDebug"];
                 StopSimDebug = ConfigurationManager.AppSettings["mrxpStopSimDebug"];
+            }
         }
 
         private bool UpdateInjectorAdapterAppConfig(string newMode)
@@ -80,7 +113,7 @@ namespace WfsMrFlexSetup
 
             if (!File.Exists(INJECTOR_ADAPTER_APPCONFIG_PATH))
             {
-                MessageBox.Show($"file does not exist: {INJECTOR_ADAPTER_APPCONFIG_PATH}");
+                MessageBox.Show($"file does not exist: {INJECTOR_ADAPTER_APPCONFIG_PATH}", "WARN", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
@@ -116,11 +149,76 @@ namespace WfsMrFlexSetup
                 Utils.DirectoryCopy(CERTEGRA_DIRECTORY, SimulatorDirectory, true);
         }
 
+        private void UpdateProgress(int percent)
+        {
+            RunOnUiThread(() => execProgressbar.Value = percent);
+        }
 
-        #region  button clicks
+        private void RunOnUiThread(Action action)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
 
+        private void FullStackProgramsInit()
+        {
 
-        private void btnBuildSimulatorDebug_Click(object sender, EventArgs e)
+            UpdateProgress(0);
+            // worklist simulator
+            string risSimStart = ConfigurationManager.AppSettings["overlayRisSimulatorStart"];
+            string risSimDirectory = ConfigurationManager.AppSettings["overlayRisSimulatorFolder"];
+            Utils.RunProcess(risSimStart, risSimDirectory, false, false, false);
+            UpdateProgress(25);
+            // ui-manager (socket IO server)
+            string uiMgrStart = ConfigurationManager.AppSettings["overlayUiManagerStart"];
+            string overlaySourceDir = ConfigurationManager.AppSettings["overlaySourceDirectory"];
+            Utils.RunProcess(uiMgrStart, overlaySourceDir, false, false, false);
+            UpdateProgress(50);
+            // Node.js shell and ng serve
+            string startNodeJsAndNgServe = ConfigurationManager.AppSettings["overlayStartNodeJsAndNgServe"]
+                .Replace("_doubleampersand_", "&&").Replace("OVERLAY_PORT_VAL", Convert.ToString(txtOverlayPortNumber.Text));
+            Utils.RunProcess(startNodeJsAndNgServe, string.Empty, false, false, false);
+            UpdateProgress(75);
+            // POC full stack
+            Utils.RunProcess(StartSimDebug, SimulatorDirectory, false, false, true);
+            UpdateProgress(100);
+        }
+
+        private void InvokeExecOnThread(Thread _thread)
+        {
+            try
+            {
+                execProgressbar.Visible = true;
+
+                _thread.IsBackground = true;
+                _thread.Start();
+                while (_thread.IsAlive)
+                    Application.DoEvents();
+            }
+            catch (ThreadAbortException ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                execProgressbar.Visible = false;
+                while (_thread.IsAlive)
+                    _thread.Abort();
+                _thread = null;
+            }
+        }
+
+        private void BuildPOCSimulatorDebug()
         {
             try
             {
@@ -134,11 +232,11 @@ namespace WfsMrFlexSetup
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnStartSimulator_Click(object sender, EventArgs e)
+        private void StartPOCSimulator()
         {
             try
             {
@@ -146,11 +244,11 @@ namespace WfsMrFlexSetup
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void btnStopSimulator_Click(object sender, EventArgs e)
+        private void StopPOCSimulator()
         {
             try
             {
@@ -158,8 +256,95 @@ namespace WfsMrFlexSetup
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void InitNewCertegraDatabase()
+        {
+            Utils.RunProcess(this.CERTEGRA_DBSCHEMAEXPOTER, this.CERTEGRA_DIRECTORY);
+        }
+
+        private void ResetWorklistData()
+        {
+            try
+            {
+                string risSimDirectory = ConfigurationManager.AppSettings["overlayRisSimulatorFolder"];
+                string risSimPurge = ConfigurationManager.AppSettings["overlayRisSimulatorPurge"];
+                string risSimCreate = ConfigurationManager.AppSettings["overlayRisSimulatorCreate"];
+                UpdateProgress(25);
+                Utils.RunProcess(risSimPurge, risSimDirectory, false, false);
+                UpdateProgress(60);
+                Utils.RunProcess(risSimCreate, risSimDirectory, false, true);
+                UpdateProgress(100);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void SwitchPOCMode()
+        {
+            try
+            {
+                string newMode = GetOppositeMode();
+
+                // 1. update file: Certegra.InjectorAdapter.Service.exe.config
+                if (UpdateInjectorAdapterAppConfig(newMode))
+                {
+                    // 2. update registry keys
+                    string deleteDistroKey = null, createDistroKey = null, distroValue = null;
+                    if (newMode == Modes.MODE_SR)
+                    {
+                        deleteDistroKey = REGISTRY_DISTRO_KEY_MRXP;
+                        createDistroKey = REGISTRY_DISTRO_KEY_SII;
+                        distroValue = REGISTRY_DISTRO_VALUE_SII;
+                    }
+                    else
+                    {
+                        deleteDistroKey = REGISTRY_DISTRO_KEY_SII;
+                        createDistroKey = REGISTRY_DISTRO_KEY_MRXP;
+                        distroValue = REGISTRY_DISTRO_VALUE_MRXP;
+                    }
+
+                    UpdateProgress(25);
+                    Utils.DeleteRegistryKey(REGISTRY_PATH_DISTROS, deleteDistroKey);
+                    Utils.CreateRegistryKey(REGISTRY_PATH_DISTROS, createDistroKey);
+                    Utils.SetRegistryValue($"{REGISTRY_PATH_DISTROS}\\{createDistroKey}", "Description", distroValue);
+                    Utils.SetRegistryValue(REGISTRY_PATH_CURRENTINJECTOR, REGISTRY_KEY_CURRENTINJECTOR, newMode);
+                    UpdateProgress(60);
+                    // 3. export new certegra database
+                    Utils.RunProcess(CERTEGRA_DBSCHEMAEXPOTER, CERTEGRA_DIRECTORY);
+                    UpdateProgress(100);
+                }
+
+
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #region  button clicks
+
+        private void btnBuildSimulatorDebug_Click(object sender, EventArgs e)
+        {
+            var _thread = new Thread(new ThreadStart(BuildPOCSimulatorDebug));
+            InvokeExecOnThread(_thread);
+        }
+
+        private void btnStartSimulator_Click(object sender, EventArgs e)
+        {
+            var _thread = new Thread(new ThreadStart(StartPOCSimulator));
+            InvokeExecOnThread(_thread);
+        }
+
+        private void btnStopSimulator_Click(object sender, EventArgs e)
+        {
+            var _thread = new Thread(new ThreadStart(StopPOCSimulator));
+            InvokeExecOnThread(_thread);
         }
 
         private void btnCopyCertegraToSim_Click(object sender, EventArgs e)
@@ -170,11 +355,9 @@ namespace WfsMrFlexSetup
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        #endregion
 
         private void btnOpenSimulatorFolder_Click(object sender, EventArgs e)
         {
@@ -191,38 +374,16 @@ namespace WfsMrFlexSetup
                 combineWorkingDirectoryWithFilename:false);
         }
 
-
         private void btnExportCertegraDatabase_Click(object sender, EventArgs e)
         {
-			Utils.RunProcess(this.CERTEGRA_DBSCHEMAEXPOTER, this.CERTEGRA_DIRECTORY);
+            var _thread = new Thread(new ThreadStart(InitNewCertegraDatabase));
+            InvokeExecOnThread(_thread);
         }
 
         private void btnOverlayStartFullStack_Click(object sender, EventArgs e)
         {
-            try
-            {
-                // worklist simulator
-                string risSimStart = ConfigurationManager.AppSettings["overlayRisSimulatorStart"];
-                string risSimDirectory = ConfigurationManager.AppSettings["overlayRisSimulatorFolder"];
-                Utils.RunProcess(risSimStart, risSimDirectory, false, false, false);
-
-                // ui-manager (socket IO server)
-                string uiMgrStart = ConfigurationManager.AppSettings["overlayUiManagerStart"];
-                string overlaySourceDir = ConfigurationManager.AppSettings["overlaySourceDirectory"];
-                Utils.RunProcess(uiMgrStart, overlaySourceDir, false, false, false);
-
-                // Node.js shell and ng serve
-                string startNodeJsAndNgServe = ConfigurationManager.AppSettings["overlayStartNodeJsAndNgServe"]
-                    .Replace("_doubleampersand_", "&&").Replace("OVERLAY_PORT_VAL", Convert.ToString(txtOverlayPortNumber.Text));
-                Utils.RunProcess(startNodeJsAndNgServe, string.Empty, false, false, false);
-
-                // POC full stack
-                Utils.RunProcess(StartSimDebug, SimulatorDirectory, false, false, true);
-            }
-            catch (Exception ex)
-            {
-
-            }
+            var _thread = new Thread(new ThreadStart(FullStackProgramsInit));
+            InvokeExecOnThread(_thread);
         }
 
         private void btnOverlayStartHelp_Click(object sender, EventArgs e)
@@ -239,20 +400,8 @@ namespace WfsMrFlexSetup
 
         private void btnOverlayResetWorklistData_Click(object sender, EventArgs e)
         {
-            try
-            {
-                string risSimDirectory = ConfigurationManager.AppSettings["overlayRisSimulatorFolder"];
-                string risSimPurge = ConfigurationManager.AppSettings["overlayRisSimulatorPurge"];
-                string risSimCreate = ConfigurationManager.AppSettings["overlayRisSimulatorCreate"];
-
-                Utils.RunProcess(risSimPurge, risSimDirectory, false, false);
-                Utils.RunProcess(risSimCreate, risSimDirectory, false, true);
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(exception.Message);
-            }
-
+            var _thread = new Thread(new ThreadStart(ResetWorklistData));
+            InvokeExecOnThread(_thread);
         }
 
         private void btnStartOrionApi_Click(object sender, EventArgs e)
@@ -304,5 +453,58 @@ namespace WfsMrFlexSetup
         {
             e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
         }
+
+        private void btnSwitchMode_Click(object sender, EventArgs e)
+        {
+            var _thread = new Thread(new ThreadStart(SwitchPOCMode));
+            InvokeExecOnThread(_thread);
+
+            // update labels
+            RefreshCurrentMode();
+        }
+
+        private void btnOverlayFolder_Click(object sender, EventArgs e)
+        {
+            string overlayDirectory = ConfigurationManager.AppSettings["overlaySourceDirectory"];
+            Utils.RunProcess(overlayDirectory, string.Empty, useShell: true, showCompletedPopup: false);
+        }
+
+        private void btnOverlayShell_Click(object sender, EventArgs e)
+        {
+            string overlayDirectory = ConfigurationManager.AppSettings["overlaySourceDirectory"];
+            Utils.RunProcess(
+               "cmd.exe",
+               overlayDirectory,
+               showCompletedPopup: false,
+               waitForExit: false,
+               combineWorkingDirectoryWithFilename: false);
+        }
+
+        private void btnOrionExplorer_Click(object sender, EventArgs e)
+        {
+            string orionDirectory = ConfigurationManager.AppSettings["orionSourceDirectory"];
+            Utils.RunProcess(orionDirectory, string.Empty, useShell: true, showCompletedPopup: false);
+        }
+
+        private void btnOrionCmdShell_Click(object sender, EventArgs e)
+        {
+            string orionDirectory = ConfigurationManager.AppSettings["orionSourceDirectory"];
+            Utils.RunProcess(
+               "cmd.exe",
+               orionDirectory,
+               showCompletedPopup: false,
+               waitForExit: false,
+               combineWorkingDirectoryWithFilename: false);
+        }
+
+        private void btnWorklistSimulator_Click(object sender, EventArgs e)
+        {
+            // worklist simulator
+            string risSimStart = ConfigurationManager.AppSettings["overlayRisSimulatorStart"];
+            string risSimDirectory = ConfigurationManager.AppSettings["overlayRisSimulatorFolder"];
+            Utils.RunProcess(risSimStart, risSimDirectory, false, false, false);
+        }
+
+        #endregion
     }
 }
