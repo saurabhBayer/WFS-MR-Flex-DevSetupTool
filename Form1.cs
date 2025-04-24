@@ -8,7 +8,7 @@ namespace WfsMrFlexSetup
 {
     public partial class Form1 : Form
     {
-        private const string VERSION = "2.0";
+        private const string VERSION = "2.1";
 
         private string currentMode = null;
 
@@ -456,11 +456,24 @@ namespace WfsMrFlexSetup
 
         private void btnSwitchMode_Click(object sender, EventArgs e)
         {
-            var _thread = new Thread(new ThreadStart(SwitchPOCMode));
-            InvokeExecOnThread(_thread);
+            //var _thread = new Thread(new ThreadStart(SwitchPOCMode));
+            //InvokeExecOnThread(_thread);
 
-            // update labels
-            RefreshCurrentMode();
+            //// update labels
+            //RefreshCurrentMode();
+
+            // Initialize Timer
+            tmrSwitcher = new System.Windows.Forms.Timer
+            {
+                Interval = counter
+            };
+
+            tmrSwitcher.Tick -= tmrSwitcher_Tick;
+            tmrSwitcher.Tick += tmrSwitcher_Tick; 
+            tmrSwitcher.Start();
+            Application.DoEvents();
+            btnSwitchMode.Enabled = false;
+            Application.DoEvents();
         }
 
         private void btnOverlayFolder_Click(object sender, EventArgs e)
@@ -523,8 +536,23 @@ namespace WfsMrFlexSetup
                 .Replace("_doubleampersand_", "&&");
             Utils.RunProcess(startNodeJsAndNgServe, string.Empty, false, false, false);
         }
+
         #endregion
-
-
+        private int counter = 240;
+        private int intervalTime = 0;
+        private void tmrSwitcher_Tick(object sender, EventArgs e)
+        {
+            counter--;
+            Application.DoEvents();
+            btnSwitchMode.Text = $"{SWITCH_MODE_BTN_LABEL} {GetOppositeMode()}" + " (" + counter + ")";
+            if (counter == intervalTime)
+            {
+                Application.DoEvents();
+                btnSwitchMode.Enabled = true;
+                btnSwitchMode.Text = $"{SWITCH_MODE_BTN_LABEL} {GetOppositeMode()}";
+                tmrSwitcher.Stop();
+            }
+            
+        }
     }
 }

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.label2 = new System.Windows.Forms.Label();
 			this.btnOverlayStartHelp = new System.Windows.Forms.Button();
@@ -50,6 +51,7 @@
 			this.btnBuildSimulatorDebug = new System.Windows.Forms.Button();
 			this.tabOverlay = new System.Windows.Forms.TabPage();
 			this.gbpOverlay = new System.Windows.Forms.GroupBox();
+			this.btnElectronMode = new System.Windows.Forms.Button();
 			this.btnOverlayShell = new System.Windows.Forms.Button();
 			this.label7 = new System.Windows.Forms.Label();
 			this.btnOverlayFolder = new System.Windows.Forms.Button();
@@ -72,7 +74,7 @@
 			this.btnWorklistSimulator = new System.Windows.Forms.Button();
 			this.button5 = new System.Windows.Forms.Button();
 			this.execProgressbar = new System.Windows.Forms.ProgressBar();
-			this.btnElectronMode = new System.Windows.Forms.Button();
+			this.tmrSwitcher = new System.Windows.Forms.Timer(this.components);
 			this.groupBoxMode.SuspendLayout();
 			this.tabcontrolPOC.SuspendLayout();
 			this.tabPOC.SuspendLayout();
@@ -172,7 +174,7 @@
 			// 
 			this.label6.AutoSize = true;
 			this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.label6.ForeColor = System.Drawing.Color.RoyalBlue;
+			this.label6.ForeColor = System.Drawing.Color.Firebrick;
 			this.label6.Location = new System.Drawing.Point(10, 82);
 			this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
 			this.label6.Name = "label6";
@@ -347,6 +349,18 @@
 			this.gbpOverlay.TabIndex = 6;
 			this.gbpOverlay.TabStop = false;
 			this.gbpOverlay.Text = "Overlay Apps";
+			// 
+			// btnElectronMode
+			// 
+			this.btnElectronMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.btnElectronMode.Location = new System.Drawing.Point(346, 142);
+			this.btnElectronMode.Margin = new System.Windows.Forms.Padding(2);
+			this.btnElectronMode.Name = "btnElectronMode";
+			this.btnElectronMode.Size = new System.Drawing.Size(220, 73);
+			this.btnElectronMode.TabIndex = 11;
+			this.btnElectronMode.Text = "Start Overlay in Electron Mode";
+			this.btnElectronMode.UseVisualStyleBackColor = true;
+			this.btnElectronMode.Click += new System.EventHandler(this.btnElectronMode_Click);
 			// 
 			// btnOverlayShell
 			// 
@@ -605,17 +619,9 @@
 			this.execProgressbar.TabIndex = 10;
 			this.execProgressbar.Visible = false;
 			// 
-			// btnElectronMode
+			// tmrSwitcher
 			// 
-			this.btnElectronMode.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnElectronMode.Location = new System.Drawing.Point(346, 142);
-			this.btnElectronMode.Margin = new System.Windows.Forms.Padding(2);
-			this.btnElectronMode.Name = "btnElectronMode";
-			this.btnElectronMode.Size = new System.Drawing.Size(220, 73);
-			this.btnElectronMode.TabIndex = 11;
-			this.btnElectronMode.Text = "Start Overlay in Electron Mode";
-			this.btnElectronMode.UseVisualStyleBackColor = true;
-			this.btnElectronMode.Click += new System.EventHandler(this.btnElectronMode_Click);
+			this.tmrSwitcher.Tick += new System.EventHandler(this.tmrSwitcher_Tick);
 			// 
 			// Form1
 			// 
@@ -700,6 +706,7 @@
 		private System.Windows.Forms.Button btnWorklistSimulator;
 		private System.Windows.Forms.ProgressBar execProgressbar;
 		private System.Windows.Forms.Button btnElectronMode;
+		private System.Windows.Forms.Timer tmrSwitcher;
 	}
 }
 
