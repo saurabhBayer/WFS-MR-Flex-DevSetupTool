@@ -456,11 +456,11 @@ namespace WfsMrFlexSetup
 
         private void btnSwitchMode_Click(object sender, EventArgs e)
         {
-            //var _thread = new Thread(new ThreadStart(SwitchPOCMode));
-            //InvokeExecOnThread(_thread);
+            var _thread = new Thread(new ThreadStart(SwitchPOCMode));
+            InvokeExecOnThread(_thread);
 
-            //// update labels
-            //RefreshCurrentMode();
+            // update labels
+            RefreshCurrentMode();
 
             // Initialize Timer
             tmrSwitcher = new System.Windows.Forms.Timer
