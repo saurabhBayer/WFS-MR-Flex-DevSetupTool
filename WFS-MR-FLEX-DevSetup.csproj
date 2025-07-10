@@ -67,6 +67,10 @@
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="obj\Debug\WfsMrFlexSetup.Form1.resources" />
+    <EmbeddedResource Include="obj\Debug\WfsMrFlexSetup.Properties.Resources.resources" />
+    <EmbeddedResource Include="obj\Release\WfsMrFlexSetup.Form1.resources" />
+    <EmbeddedResource Include="obj\Release\WfsMrFlexSetup.Properties.Resources.resources" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -77,7 +81,15 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="App-IM-POC.config" />
+    <None Include="App.config" />
     <None Include="app.manifest" />
+    <None Include="bin\WfsMrFlexSetup\WfsMrFlexSetup.exe.config" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferences.cache" />
+    <None Include="obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="obj\Debug\WFS-MR-FLEX-DevSetup.csproj.GenerateResource.cache" />
+    <None Include="obj\Debug\WFS-MR-FLEX-DevSetup.csprojAssemblyReference.cache" />
+    <None Include="obj\Release\WFS-MR-FLEX-DevSetup.csproj.GenerateResource.cache" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -87,13 +99,21 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="bin\Debug\WfsMrFlexSetup.exe" />
+    <Content Include="bin\Debug\WfsMrFlexSetup.pdb" />
+    <Content Include="bin\WfsMrFlexSetup\WfsMrFlexSetup.exe" />
+    <Content Include="bin\WfsMrFlexSetup\WfsMrFlexSetup.pdb" />
+    <Content Include="obj\Debug\TempPE\Properties.Resources.Designer.cs.dll" />
+    <Content Include="obj\Debug\WFS-MR-FLEX-DevSetup.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Debug\WfsMrFlexSetup.exe" />
+    <Content Include="obj\Debug\WfsMrFlexSetup.pdb" />
+    <Content Include="obj\Release\WFS-MR-FLEX-DevSetup.csproj.FileListAbsolute.txt" />
+    <Content Include="obj\Release\WfsMrFlexSetup.exe" />
+    <Content Include="obj\Release\WfsMrFlexSetup.pdb" />
     <Content Include="s2mrswitcher.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
