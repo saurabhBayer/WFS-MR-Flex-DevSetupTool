@@ -81,8 +81,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="App-IM-POC.config" />
     <None Include="App.config" />
+    <None Include="App-POC.config" />
     <None Include="app.manifest" />
     <None Include="bin\WfsMrFlexSetup\WfsMrFlexSetup.exe.config" />
     <None Include="obj\Debug\DesignTimeResolveAssemblyReferences.cache" />
